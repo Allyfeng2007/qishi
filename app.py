@@ -14,7 +14,7 @@ def get_discrimination_level(text):
             {"role": "user", "content": f"{text}"}
         ]
     )
-    return completion.choices[0].message.content.strip()
+    return completion.choices[0].message.content
 
 def tiaozheng(text):
     completion = client_zp.chat.completions.create(
@@ -49,10 +49,10 @@ if st.button("开始分析"):
 
                 if score != "1":
                     try:
-                        result = tiaozheng(input)
+                        result = tiaozheng(user_input)
                         st.success(f"调整语气后的句子：{result}")
                     except Exception as e:
-                        st.error(f"分析失败：{e}", icon="🚨")
-                        
+                        st.error("出错了，请稍后再试😂")
+
             except Exception as e:
-                st.error(f"分析失败：{e}", icon="🚨")
+                st.error("出错了，请稍后再试😂")
