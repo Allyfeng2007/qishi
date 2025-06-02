@@ -2,14 +2,8 @@ import streamlit as st
 from zhipuai import ZhipuAI
 
 # 初始化 Zhipu 客户端（建议用环境变量方式处理 key）
+#原来是client_zp =  ZhipuAI(api_key="0a9aa2492854432a91c059abe8d98d6d.pTabYtSrCgTQiqsV")
 client_zp = ZhipuAI(api_key=st.secrets["ZHIPU_API_KEY"])
-
-# Streamlit 页面设置
-st.set_page_config(page_title="语义歧视分析器", layout="centered")
-st.title("🧠 语义歧视分析小工具")
-
-# 用户输入句子
-user_input = st.text_area("请输入要分析的句子：", height=100)
 
 # 分析函数
 def get_discrimination_level(text):
@@ -22,11 +16,43 @@ def get_discrimination_level(text):
     )
     return completion.choices[0].message.content.strip()
 
+def tiaozheng(text):
+    completion = client_zp.chat.completions.create(
+        model="glm-4-plus",
+        messages=[
+            {"role": "system", "content": "### 定位：语言表述专家\n ### 任务：将歧视性语句换一种方法表述，使表述中不包含歧视语义。"},
+            {"role": "user", "content": text}
+      ]
+    )
+
+    return completion.choices[0].message.content
+
+
+# Streamlit 页面设置
+st.set_page_config(page_title="语义歧视分析器", layout="centered")
+st.title("🧠 语义歧视分析小工具")
+
+# 用户输入句子
+user_input = st.text_area("请输入要分析的句子：", height=100)
+
+
+
 # 当用户点击按钮时进行分析
 if st.button("开始分析"):
     if user_input.strip() == "":
         st.warning("请输入一句话再分析哦。")
     else:
-        with st.spinner("正在分析中..."):
-            score = get_discrimination_level(user_input)
-            st.success(f"🧾 歧视程度评分：**{score}**（1~5）")
+        with st.spinner("正在分析中...",  show_time=True):
+            try:
+                score = get_discrimination_level(user_input)
+                st.success(f"🧾 歧视程度评分：**{score}**（1~5）")
+
+                if score != "1":
+                    try:
+                        result = tiaozheng(input)
+                        st.success(f"调整语气后的句子：{result}")
+                    except Exception as e:
+                        st.error(f"分析失败：{e}", icon="🚨")
+                        
+            except Exception as e:
+                st.error(f"分析失败：{e}", icon="🚨")
